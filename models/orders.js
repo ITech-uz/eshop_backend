@@ -1,0 +1,12 @@
+const { Schema, model } = require("mongoose");
+
+const ordersScheme = Schema({
+    name: String,
+    image: String,
+    countInStock: {
+        type: String,
+        required: true,
+    },
+});
+
+module.Orders = model("Orders", ordersScheme);
