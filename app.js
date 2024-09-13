@@ -4,14 +4,17 @@ const bodyParser = require("body-parser");
 require("dotenv/config");
 const morgan = require("morgan");
 const api = process.env.API_URL;
-const productRouter = require("./routers/products")
+const productRouter = require("./routers/products");
 const mongoose = require("mongoose");
+const cors = require("cors");
+
+app.use(cors());
+app.options("*", cors());
 
 // Middlewares
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
-app.use(`${api}/products`, productRouter)
-
+app.use(`${api}/products`, productRouter);
 
 // Connect to db
 mongoose

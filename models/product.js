@@ -9,4 +9,4 @@ const productScheme = Schema({
   },
 });
 
-module.Product = model("Product", productScheme);
+module.exports = model("Product", productScheme);
