@@ -5,6 +5,7 @@ require("dotenv/config");
 const morgan = require("morgan");
 const api = process.env.API_URL;
 const productRouter = require("./routers/products");
+const categoryRouter = require("./routers/categories");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
@@ -15,6 +16,7 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(`${api}/products`, productRouter);
+app.use(`${api}/categories`, categoryRouter)
 
 // Connect to db
 mongoose
