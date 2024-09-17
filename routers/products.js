@@ -1,5 +1,6 @@
 const express = require("express");
 const Product = require("../models/product");
+const Category = require("../models/category")
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -10,8 +11,11 @@ router.get("/", async (req, res) => {
   res.send(products);
 });
 
-router.post("/", (req, res) => {
-  console.log("request come");
+router.post("/", async (req, res) => {
+  const category = await Category.findById(req.body.category)
+
+  if(!category) return res.status(400).send("Category is not valid!")
+
   const product = Product({
     name: req.body.name,
     description: req.body.description,
@@ -26,17 +30,14 @@ router.post("/", (req, res) => {
     isFeatured: req.body.isFeatured,
   });
 
-  product
-    .save()
-    .then((storedProduct) => {
-      res.status(201).json(storedProduct);
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-        status: false,
-      });
-    });
+  product = await product.save()
+
+  if (!product) {
+    res.status(500).send("The product cannot be saved")
+  }
+
+  res.send(product)
+
 });
 
 module.exports = router;
