@@ -1,4 +1,4 @@
-const {Schema, model} = require("mongoose")
+const { Schema, model } = require("mongoose")
 
 const orderItemsScheme = Schema({
     product: {
@@ -10,6 +10,14 @@ const orderItemsScheme = Schema({
         required: true
     }
 
+})
+
+orderItemsScheme.virtual('id').get(function () {
+    return this._id.toHexString();
+})
+
+orderItemsScheme.set('toJSON', {
+    virtuals: true
 })
 
 module.OrderItems = model("OrderItems", orderItemsScheme)

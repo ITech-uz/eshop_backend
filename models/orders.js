@@ -9,4 +9,12 @@ const ordersScheme = Schema({
     },
 });
 
+ordersScheme.virtual('id').get(function () {
+    return this._id.toHexString();
+})
+
+ordersScheme.set('toJSON', {
+    virtuals: true
+})
+
 module.Orders = model("Orders", ordersScheme);

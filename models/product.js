@@ -57,4 +57,12 @@ const productScheme = Schema({
   }
 });
 
+productScheme.virtual('id').get(function () {
+  return this._id.toHexString();
+})
+
+productScheme.set('toJSON', {
+  virtuals: true
+})
+
 module.exports = model("Product", productScheme);
