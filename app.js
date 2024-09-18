@@ -6,6 +6,7 @@ const morgan = require("morgan");
 const api = process.env.API_URL;
 const productRouter = require("./routers/products");
 const categoryRouter = require("./routers/categories");
+const userRouter = require("./routers/users");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
@@ -17,6 +18,8 @@ app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(`${api}/products`, productRouter);
 app.use(`${api}/categories`, categoryRouter)
+app.use(`${api}/users`, userRouter);
+
 
 // Connect to db
 mongoose
