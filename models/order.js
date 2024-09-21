@@ -41,7 +41,7 @@ const orderScheme = Schema({
     type: Schema.Types.ObjectId,
     ref: "User"
   },
-  dateOrder: {
+  dateOrdered: {
     type: Date,
     default: Date.now()
   }

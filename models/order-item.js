@@ -11,12 +11,5 @@ const orderItemScheme = Schema({
   }
 })
 
-orderItemScheme.virtual('id').get(function () {
-  return this._id.toHexString();
-})
-
-orderItemScheme.set('toJSON', {
-  virtuals: true
-})
 
 module.exports = model("OrderItem", orderItemScheme)
