@@ -111,6 +111,41 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Get total sales
+router.get("/get/totalsales", async (req, res) => {
+  const totalSales = await Order.aggregate([{
+    $group: { _id: null, totalsales: { $sum: '$totalPrice' } }
+  }])
+
+  res.send({
+    totalSales: totalSales.pop().totalsales
+  })
+})
+
+// Get all orders count
+router.get("/get/count", async (req, res) => {
+  const orderCount = await Order.countDocuments();
+  if (!orderCount) {
+    res.status(500).json({ status: false, message: "Order not found" });
+    return;
+  }
+  res.send({
+    count: orderCount
+  });
+});
+
+// Get specific user's count
+router.get("/get/user-orders/:userId", async (req, res) => {
+  const userOrders = await Order.find({ user: req.params.userId })
+    .populate({ path: "orderItems", populate: { path: "product", populate: "category" } })
+    .sort({ 'dateOrdered': -1 });
+  if (!userOrders) {
+    res.status(500).json({ status: false });
+    return;
+  }
+  res.send(userOrders);
+});
+
 
 
 module.exports = router;
