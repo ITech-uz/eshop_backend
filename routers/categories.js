@@ -23,20 +23,25 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/", async (req, res) => {
-  const { name, color, icon } = req.body
-  let storedCategory = new Category({
-    name,
-    color,
-    icon
-  })
-  storedCategory = await storedCategory.save()
+  try {
+    const { name, color, icon } = req.body;
+    let storedCategory = new Category({
+      name,
+      color,
+      icon,
+    });
 
-  if (!storedCategory) {
-    return res.status(400).send("The category is not created")
+    storedCategory = await storedCategory.save();
+
+    if (!storedCategory) {
+      return res.status(400).send("The category is not created");
+    }
+
+    return res.status(200).json({ success: true, category: storedCategory });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  res.send(storedCategory).json({ success: true })
-})
+});
 
 router.put("/:id", async (req, res) => {
   const { name, color, icon } = req.body

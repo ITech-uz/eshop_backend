@@ -9,6 +9,7 @@ router.get("/", async (req, res) => {
   const products = await Product.find().populate('category');
   if (!products) {
     res.status(500).json({ status: false });
+    return;
   }
   res.send(products);
 });
@@ -21,6 +22,7 @@ router.get("/:id", async (req, res) => {
   const product = await Product.findById(req.params.id).populate('category');
   if (!product) {
     res.status(500).json({ status: false, message: "Product not found" });
+    return;
   }
   res.send(product);
 });
@@ -54,6 +56,7 @@ router.post("/", async (req, res) => {
 
   if (!product) {
     res.status(500).send("The product cannot be saved")
+    return;
   }
 
   res.send(product)
@@ -92,6 +95,7 @@ router.put("/:id", async (req, res) => {
 
   if (!product) {
     res.status(500).send("The product cannot be saved")
+    return;
   }
 
   res.send(product)
@@ -114,6 +118,7 @@ router.get("/get/count", async (req, res) => {
   const productsCount = await Product.countDocuments();
   if (!productsCount) {
     res.status(500).json({ status: false, message: "Product not found" });
+    return;
   }
   res.send({
     count: productsCount
@@ -126,6 +131,7 @@ router.get("/get/featured/:count", async (req, res) => {
   const feturedProducts = await Product.find({ isFeatured: true }).limit(+count);
   if (!feturedProducts) {
     res.status(500).json({ status: false, message: "Product not found" });
+    return;
   }
   res.send(feturedProducts);
 });
