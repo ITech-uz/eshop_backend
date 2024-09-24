@@ -60,9 +60,9 @@ router.post("/", async (req, res) => {
   });
   user = await user.save();
   if (!user) {
-    return res.status(400).send("The category is not created");
+    return res.status(400).json({success: false, message: "Something went wrong, try again later!"});
   }
-  res.send(user).json({ success: true });
+  res.status(200).json({ success: true, user });
 });
 
 // Auth
@@ -80,7 +80,21 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, secret, {
       expiresIn: "1d",
     });
-    return res.status(200).send({ user: user.email, token });
+    return res.status(200).json({
+      success: true,
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        isAdmin: user.isAdmin,
+        street: user.street,
+        apartment: user.apartment,
+        zip: user.zip,
+        city: user.city,
+        country: user.country
+      },
+      token
+    });
   }
   res.status(400).send("Password is wrong!");
 });
