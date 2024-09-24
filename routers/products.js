@@ -3,8 +3,8 @@ const Product = require("../models/product");
 const Category = require("../models/category")
 const router = express.Router();
 const mongoose = require("mongoose");
-const product = require("../models/product");
 
+// Get all products without token
 router.get("/", async (req, res) => {
   const products = await Product.find().populate('category');
   if (!products) {
