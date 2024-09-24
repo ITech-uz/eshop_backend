@@ -1,5 +1,4 @@
 name: Deployment
-
 on:
   push:
     branches:
@@ -13,11 +12,11 @@ jobs:
     steps:
       - name: Checkout
 
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Deployment
 
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.7
 
         with:
           host: ${{ secrets.HOST }}
@@ -28,6 +27,6 @@ jobs:
 
           script: |
             cd /var/www/e_shop_backend
-            git pull origin master
-            npm i
-            pm2 restart all
+            git pull origin master || { echo 'Git pull failed'; exit 1; }
+            npm i || { echo 'NPM install failed'; exit 1; }
+            pm2 restart all || { echo 'PM2 restart failed'; exit 1; }
