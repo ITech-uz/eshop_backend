@@ -16,7 +16,6 @@ const errorHandler = require("./helpers/error-handler")
 app.use(cors());
 app.options("*", cors());
 
-
 // Middlewares
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
