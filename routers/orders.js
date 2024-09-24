@@ -1,26 +1,27 @@
 const express = require("express");
 const Order = require("../models/order");
 const OrderItem = require("../models/order-item");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const orders = await Order.find().populate("user", 'name').sort({ 'dateOrdered': -1 });
+  const orders = await Order.find().populate("user", 'name').sort({'dateOrdered': -1});
   if (!orders) {
-    res.status(500).json({ status: false });
+    res.status(500).json({status: false, message: "Orders not found!"});
     return;
   }
-  res.send(orders);
+  res.status(200).json({success: true, orders});
 });
 
 router.get("/:id", async (req, res) => {
   const order = await Order.findById(req.params.id)
     .populate("user", 'name')
-    .populate({ path: "orderItems", populate: { path: "product", populate: "category" } });
+    .populate({path: "orderItems", populate: {path: "product", populate: "category"}});
   if (!order) {
-    res.status(500).json({ status: false });
+    res.status(500).json({status: false, message: "Order not found!"});
     return;
   }
-  res.send(order);
+  res.status(200).json({success: true, order});
 });
 
 router.put("/:id", async (req, res) => {
@@ -29,38 +30,37 @@ router.put("/:id", async (req, res) => {
     {
       status: req.body.status
     },
-    { new: true }
+    {new: true}
   )
     .then(updatedOrder => {
       if (updatedOrder) {
-        return res.status(200).send(updatedOrder)
+        return res.status(200).json({success: true, order: updatedOrder})
       }
     })
     .catch(err => {
-      res.status(400).json({ success: false, message: err })
-      return
+      return res.status(400).json({success: false, message: err})
     })
 })
 
 router.delete("/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const order = await Order.findOneAndDelete({ _id: id });
+    const order = await Order.findOneAndDelete({_id: id});
 
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res.status(404).json({success: false, message: "Order not found"});
     }
 
     await Promise.all(
       order.orderItems.map(async (itemsId) => {
-        await OrderItem.findOneAndDelete({ _id: itemsId });
+        await OrderItem.findOneAndDelete({_id: itemsId});
       })
     );
 
-    return res.status(200).json({ success: true, message: "The order deleted successfully!" });
+    return res.status(200).json({success: true, message: "The order deleted successfully!"});
 
-  } catch (err) {
-    return res.status(400).json({ success: false, message: err.message });
+  } catch (error) {
+    return res.status(400).json({success: false, message: error?.message, error});
   }
 });
 
@@ -80,8 +80,7 @@ router.post("/", async (req, res) => {
 
     const totalPrices = await Promise.all(orderIds.map(async (orderItemId) => {
       const orderItem = await OrderItem.findById(orderItemId).populate('product', 'price');
-      const totalPrice = orderItem.product.price * orderItem.quantity
-      return totalPrice
+      return orderItem.product.price * orderItem.quantity
     }))
 
     const totalPrice = totalPrices.reduce((a, b) => a + b, 0).toFixed(2)
@@ -102,22 +101,23 @@ router.post("/", async (req, res) => {
     storedOrder = await storedOrder.save();
 
     if (!storedOrder) {
-      return res.status(400).send("The Order could not be created");
+      return res.status(400).json({success: false, message: "The Order could not be created"});
     }
 
-    return res.status(200).json({ success: true, order: storedOrder });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(200).json({success: true, order: storedOrder});
+  } catch (error) {
+    return res.status(500).json({success: false, message: error?.message, error});
   }
 });
 
 // Get total sales
 router.get("/get/totalsales", async (req, res) => {
   const totalSales = await Order.aggregate([{
-    $group: { _id: null, totalsales: { $sum: '$totalPrice' } }
+    $group: {_id: null, totalsales: {$sum: '$totalPrice'}}
   }])
 
-  res.send({
+  res.status(200).json({
+    success: true,
     totalSales: totalSales.pop().totalsales
   })
 })
@@ -126,26 +126,44 @@ router.get("/get/totalsales", async (req, res) => {
 router.get("/get/count", async (req, res) => {
   const orderCount = await Order.countDocuments();
   if (!orderCount) {
-    res.status(500).json({ status: false, message: "Order not found" });
+    res.status(500).json({status: false, message: "Order not found"});
     return;
   }
-  res.send({
+  res.status(200).json({
+    success: true,
     count: orderCount
   });
 });
 
 // Get specific user's count
-router.get("/get/user-orders/:userId", async (req, res) => {
-  const userOrders = await Order.find({ user: req.params.userId })
-    .populate({ path: "orderItems", populate: { path: "product", populate: "category" } })
-    .sort({ 'dateOrdered': -1 });
-  if (!userOrders) {
-    res.status(500).json({ status: false });
-    return;
+router.get("/get/my-orders", async (req, res) => {
+  const authorization = req.headers.authorization.split(" ")[1];
+  let decoded;
+  try {
+    decoded = jwt.verify(authorization, process.env.SECRET);
+    const userId = decoded.userId;
+    if (!userId) {
+      // Handle the case where the user is not found
+      return res.status(404).json({success: false, message: "User not found"});
+    }
+    const userOrders = await Order.find({user: userId})
+      .populate({
+        path: "orderItems",
+        populate: {
+          path: "product",
+          populate: "category"
+        }
+      })
+      .sort({'dateOrdered': -1});
+    if (!userOrders) {
+      res.status(400).json({status: false, message: "Orders not found"});
+      return;
+    }
+    res.status(200).json({success: true, orders: userOrders});
+  } catch (e) {
+    return res.status(401).send("Unauthorized");
   }
-  res.send(userOrders);
 });
-
 
 
 module.exports = router;

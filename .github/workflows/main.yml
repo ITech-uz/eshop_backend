@@ -1,0 +1,33 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+
+        uses: actions/checkout@v2
+
+      - name: Deployment
+
+        uses: appleboy/ssh-action@master
+
+        with:
+          host: ${{ secrets.HOST }}
+
+          username: ${{ secrets.USERNAME }}
+
+          password: ${{ secrets.PASSWORD }}
+
+          script: |
+            cd /var/www/e_shop_backend
+            git pull origin master
+            npm i
+            pm2 restart all

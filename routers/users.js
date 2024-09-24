@@ -29,7 +29,7 @@ router.get("/getme", async (req, res) => {
 
       if (!user) {
         // Handle the case where the user is not found
-        return res.status(404).json({message: "User not found"});
+        return res.status(404).json({success: false, message: "User not found"});
       }
 
       return res.status(200).json({success: true, user});
