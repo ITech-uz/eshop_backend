@@ -21,6 +21,9 @@ app.options("*", cors());
 app.use(bodyParser.json());
 app.use(morgan("tiny"));
 app.use(authJwt()); // Apply the JWT middleware
+app.use("/public/uploads", express.static(__dirname + "/public/uploads"))
+app.use(errorHandler); // Error handling middleware for JWT authentication
+
 
 
 
@@ -31,8 +34,7 @@ app.use(`${api}/users`, userRouter);
 app.use(`${api}/orders`, orderRouter);
 
 
-// Error handling middleware for JWT authentication
-app.use(errorHandler);
+
 
 // Connect to db
 mongoose
