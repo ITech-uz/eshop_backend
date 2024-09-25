@@ -4,6 +4,7 @@ const Category = require("../models/category")
 const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer")
+const handleValidationError = require("../helpers/validation-error-handler");
 
 const FILE_TYPE_MAP = {
   "image/png": "png",
@@ -15,7 +16,6 @@ const FILE_TYPE_MAP = {
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const isValid = FILE_TYPE_MAP[file.mimetype];
-    console.log(file)
     let uploadError = new Error("invalid image type");
     if (isValid) {
       uploadError = null;
@@ -56,44 +56,50 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", uploadOption.single('image'), async (req, res) => {
-  const categoryId = req.body.category;
-  // Check if the categoryId is a valid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-    return res.status(400).send("Invalid category ID");
+  try{
+    const categoryId = req.body.category;
+    // Check if the categoryId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).send("Invalid category ID");
+    }
+
+    const category = await Category.findById(categoryId);
+    if (!category) return res.status(400).json({success: false, message: "Category is not valid!"});
+
+    const file = req.file;
+    if (!file) return res.status(400).json({success: false, message: "No file in the request!"});
+
+    const fileName = req.file.filename
+    const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`
+
+    let product = Product({
+      name: req.body.name,
+      description: req.body.description,
+      richDescription: req.body.richDescription,
+      image: `${basePath}${fileName}`,
+      brand: req.body.brand,
+      price: req.body.price,
+      category: req.body.category,
+      countInStock: req.body.countInStock,
+      rating: req.body.rating,
+      numReviews: req.body.numReviews,
+      isFeatured: req.body.isFeatured,
+    });
+
+    product = await product.save()
+
+    if (!product) {
+      res.status(500).send("The product cannot be saved")
+      return;
+    }
+
+    res.send(product)
+  } catch (error) {
+    if (!handleValidationError(error, res)) {
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
+
   }
-
-  const category = await Category.findById(categoryId);
-  if (!category) return res.status(400).json({success: false, message: "Category is not valid!"});
-
-  const file = req.file;
-  if (!file) return res.status(400).json({success: false, message: "No file in the request!"});
-
-  const fileName = req.file.filename
-  const basePath = `${req.protocol}://${req.get('host')}/public/uploads/`
-
-  let product = Product({
-    name: req.body.name,
-    description: req.body.description,
-    richDescription: req.body.richDescription,
-    image: `${basePath}${fileName}`,
-    brand: req.body.brand,
-    price: req.body.price,
-    category: req.body.category,
-    countInStock: req.body.countInStock,
-    rating: req.body.rating,
-    numReviews: req.body.numReviews,
-    isFeatured: req.body.isFeatured,
-  });
-
-  product = await product.save()
-
-  if (!product) {
-    res.status(500).send("The product cannot be saved")
-    return;
-  }
-
-  res.send(product)
-
 });
 
 router.put("/:id", async (req, res) => {
@@ -110,28 +116,37 @@ router.put("/:id", async (req, res) => {
     return res.status(400).send("Invalid product ID");
   }
 
-  const product = await Product.findByIdAndUpdate(req.params.id,
-    {
-      name: req.body.name,
-      description: req.body.description,
-      richDescription: req.body.richDescription,
-      image: req.body.image,
-      brand: req.body.brand,
-      price: req.body.price,
-      category: req.body.category,
-      countInStock: req.body.countInStock,
-      rating: req.body.rating,
-      numReviews: req.body.numReviews,
-      isFeatured: req.body.isFeatured,
-    },
-    {new: true});
+  try{
+    const product = await Product.findByIdAndUpdate(req.params.id,
+      {
+        name: req.body.name,
+        description: req.body.description,
+        richDescription: req.body.richDescription,
+        image: req.body.image,
+        brand: req.body.brand,
+        price: req.body.price,
+        category: req.body.category,
+        countInStock: req.body.countInStock,
+        rating: req.body.rating,
+        numReviews: req.body.numReviews,
+        isFeatured: req.body.isFeatured,
+      },
+      {new: true});
 
-  if (!product) {
-    res.status(500).send("The product cannot be saved")
-    return;
+    if (!product) {
+      res.status(500).send("The product cannot be saved")
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      product
+    })
+  } catch (error) {
+    if (!handleValidationError(error, res)) {
+      res.status(500).json({ success: false, message: 'Server error' });
+    }
   }
-
-  res.send(product)
 })
 
 router.delete("/:id", (req, res) => {
