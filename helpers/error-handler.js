@@ -43,6 +43,7 @@ async function errorHandler(err, req, res, next) {
   }
 
   // Pass the error to the next middleware
+  console.log("error logged:", err)
   next(err);
 }
 
